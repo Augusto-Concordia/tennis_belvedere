@@ -44,6 +44,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material grid_s_material = {
         .shader = grid_shader,
         .alpha = 0.4f,
+        .texture_influence = 0.0f
     };
     main_grid = std::make_unique<VisualGrid>(78, 36, 1.0f, glm::vec3(0.0f), glm::vec3(90.0f, 0.0f, 0.0f), grid_s_material);
 
@@ -289,7 +290,7 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // draws the world cube
-    //world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
+    world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the main light cube
     main_light_cube->position = main_light->GetPosition();
