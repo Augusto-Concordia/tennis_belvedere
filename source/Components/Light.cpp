@@ -22,7 +22,7 @@ void Light::SetPosition(const glm::vec3 &_position) {
 }
 
 void Light::SetTarget(const glm::vec3 &_target) {
-    position = _target;
+    target = _target;
 
     UpdateView();
 }

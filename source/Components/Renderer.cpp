@@ -9,7 +9,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 25.0f, 30.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
-    main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 40.0f, 50.0f);
+    main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -256,7 +256,8 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
 
     // moves the main light
     auto light_turning_radius = 4.0f;
-    main_light->SetPosition(glm::vec3(glm::cos(glfwGetTime() * 2.0f) * light_turning_radius, 5.0f * glm::sin(glfwGetTime() / 2.0f) + 5.0f, glm::sin(glfwGetTime()) *  light_turning_radius));
+    main_light->SetPosition(glm::vec3(30.0f, 10.0f, 0.0f));
+    main_light->SetTarget(glm::vec3(0.0f, 5.0f, 0.0f));
 
     // SHADOW MAP PASS
 
@@ -274,7 +275,7 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
 
         // draws the rackets
         DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
-        DrawOneRacket(rackets[1].position, rackets[1].rotation, rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
 
         ground_plane->Draw(main_light->GetViewProjection(), main_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
     }
