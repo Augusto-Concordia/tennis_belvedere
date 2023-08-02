@@ -9,7 +9,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 25.0f, 30.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
-    main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f);
+    main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 40.0f, 50.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -215,8 +215,15 @@ void Renderer::Init() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // the following 2 blocks mitigate shadow map artifacts, coming from: https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
+    // when sampling outside, we don't want a repeating pattern
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // sets the border color to white, so that the shadow map is white outside the light's view (i.e. no shadow)
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // binds the shadow map depth texture to the framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_depth_tex, 0);
@@ -243,7 +250,7 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
 
     // moves the main light
     auto light_turning_radius = 4.0f;
-    main_light->SetPosition(glm::vec3(glm::cos(glfwGetTime() * 2.0f) * light_turning_radius, 10.0f * glm::sin(glfwGetTime() / 2.0f) + 15.0f, glm::sin(glfwGetTime()) *  light_turning_radius));
+    main_light->SetPosition(glm::vec3(glm::cos(glfwGetTime() * 2.0f) * light_turning_radius, 5.0f * glm::sin(glfwGetTime() / 2.0f) + 5.0f, glm::sin(glfwGetTime()) *  light_turning_radius));
 
     // SHADOW MAP PASS
 
@@ -282,7 +289,7 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // draws the world cube
-    world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
+    //world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the main light cube
     main_light_cube->position = main_light->GetPosition();

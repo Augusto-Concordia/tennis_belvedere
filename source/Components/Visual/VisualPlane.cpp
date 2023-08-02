@@ -53,6 +53,9 @@ void VisualPlane::DrawFromMatrix(const glm::mat4 &_viewProjection, const glm::ve
 
     current_material->shader->SetVec3("u_light_pos", current_material->main_light->GetPosition());
     current_material->shader->SetVec3("u_light_color", current_material->main_light->GetColor());
+    current_material->shader->SetVec3("u_light_attenuation", current_material->main_light->attenuation);
+    current_material->shader->SetVec3("u_spot_dir", current_material->main_light->GetSpotlightDirection());
+    current_material->shader->SetFloat("u_spot_cutoff", current_material->main_light->GetSpotlightCutoff());
 
     current_material->shader->SetFloat("u_ambient_strength", current_material->main_light->ambient_strength);
     current_material->shader->SetFloat("u_specular_strength", current_material->main_light->specular_strength);
