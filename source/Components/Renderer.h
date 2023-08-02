@@ -54,17 +54,12 @@ private:
     std::shared_ptr<VisualCube> augusto_racket_cube;
     std::vector<Shader::Material> augusto_racket_materials;
 
-    VisualCube gabrielle_racket_cube;
-    VisualCube jack_racket_cube;
-
     std::vector<Racket> rackets;
     std::vector<Racket> default_rackets;
 
     int viewport_width, viewport_height;
 
     bool shadow_mode = true;
-    bool texture_mode = true;
-    bool light_movement = true;
     int racket_render_mode = GL_TRIANGLES;
     int selected_player = 4;
 

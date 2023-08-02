@@ -208,25 +208,6 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f),
         glm::vec3(0.8f));
-
-    ////
-
-    // gabrielle racket cube
-    gabrielle_racket_cube = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material);
-    rackets[1] = default_rackets[1] = Racket(
-        glm::vec3(10.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f),
-        glm::vec3(0.8f));
-
-    ////
-
-    // jack racket cube
-    jack_racket_cube = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material);
-    rackets[2] = default_rackets[2] = Racket(
-        glm::vec3(-10.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f),
-        glm::vec3(0.8f));
-    //
 }
 
 void Renderer::Init() {
@@ -272,8 +253,7 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
 
     // moves the main light
     auto light_turning_radius = 4.0f;
-    if (light_movement)
-        main_light->SetPosition(glm::vec3(glm::cos(glfwGetTime() * 2.0f) * light_turning_radius, 10.0f * glm::sin(glfwGetTime() / 2.0f) + 15.0f, glm::sin(glfwGetTime()) *  light_turning_radius));
+    main_light->SetPosition(glm::vec3(glm::cos(glfwGetTime() * 2.0f) * light_turning_radius, 10.0f * glm::sin(glfwGetTime() / 2.0f) + 15.0f, glm::sin(glfwGetTime()) *  light_turning_radius));
 
     // SHADOW MAP PASS
 
@@ -786,24 +766,6 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
     if (Input::IsKeyPressed(_window, GLFW_KEY_HOME) || Input::IsKeyPressed(_window, GLFW_KEY_KP_5))
     {
         main_camera->SetDefaultPositionAndTarget();
-    }
-
-    // pauses camera movement
-    if (Input::IsKeyReleased(_window, GLFW_KEY_Z))
-    {
-        light_movement = !light_movement;
-    }
-
-    // camera rotation reset
-    if (Input::IsKeyReleased(_window, GLFW_KEY_X))
-    {
-        texture_mode = !texture_mode;
-
-        ground_plane->material.texture_influence = texture_mode ? 1.0f : 0.0f;
-
-        tennis_balls[0].material.texture_influence = texture_mode ? 1.0f : 0.0f;
-        tennis_balls[1].material.texture_influence = texture_mode ? 1.0f : 0.0f;
-        tennis_balls[2].material.texture_influence = texture_mode ? 1.0f : 0.0f;
     }
 
     // keyboard triggers
