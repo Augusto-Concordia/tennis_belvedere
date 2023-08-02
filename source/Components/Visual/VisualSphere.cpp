@@ -85,7 +85,7 @@ VisualSphere::VisualSphere(float radius, int subdivisions, glm::vec3 _position, 
     }
 
     vertices = temp_v;
-    VisualObject::SetupGlBuffersVerticesNormalUv();
+    VisualObject::SetupGlBuffersVerticesNormalsUvsWithIndices();
 }
 
 glm::vec3 VisualSphere::normalizeVertice(float vx, float vy, float vz) {

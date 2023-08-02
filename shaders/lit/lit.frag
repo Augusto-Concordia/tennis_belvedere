@@ -11,8 +11,8 @@ uniform float u_ambient_strength; //ambient light strength
 uniform float u_specular_strength; //specular light strength
 uniform int u_shininess; //light shininess
 
-uniform vec3 u_color; //cube color
-uniform float u_alpha; //cube opacity
+uniform vec3 u_color; //color
+uniform float u_alpha; //opacity
 
 uniform float u_shadows_influence = 1.0; //are shadows enabled?
 uniform float u_texture_influence = 0.5; //are textures enabled?

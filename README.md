@@ -88,3 +88,7 @@ _The following changes the world orientation (orbits the camera)._
 * `X`: Toggles textures on/off
 * `B`: Toggles shadow mapping on/off
 * `Z`: Pauses light movement
+
+## Attributions
+
+[Sky Texture](https://www.freepik.com/free-vector/watercolor-blue-cotton-clouds-background_22379917.htm#query=sky%20texture%20seamless&position=11&from_view=keyword&track=ais)

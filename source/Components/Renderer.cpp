@@ -71,10 +71,12 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     main_y_line = std::make_unique<VisualLine>(glm::vec3(0.01f), glm::vec3(0.01f, 5.01f, 0.01f), y_line_s_material);
     main_z_line = std::make_unique<VisualLine>(glm::vec3(0.01f), glm::vec3(0.01f, 0.01f, 5.01f), z_line_s_material);
 
-    // world cube
+    // world cube - rgb(176, 212, 228)
     Shader::Material world_s_material = {
         .shader = unlit_shader,
-        .color = glm::vec3(0.53f, 0.81f, 0.92f),
+        .color = glm::vec3(0.69f, 0.83f, 0.89f),
+        .texture = Texture::Library::CreateTexture("assets/sky.jpg"),
+        .texture_influence = 1.0f,
     };
     world_cube = std::make_unique<VisualCube>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(200.0f), glm::vec3(0.0f), world_s_material);
 
@@ -134,18 +136,6 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .shininess = 4,
     };
     letter_cubes[0] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, a_s_material); // letter a
-
-    letter_cubes[1] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material); // letter g
-
-    letter_cubes[2] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material); // letter j
-
-    Shader::Material j_s_material = {
-        .shader = lit_shader,
-        .color = glm::vec3(0.34f, 0.84f, 0.98f),
-        .main_light = main_light,
-        .shininess = 128,
-    };
-    letter_cubes[2] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, j_s_material); // letter j
 
     const auto racket_line_thickness = 2.0f;
     const auto racket_point_size = 3.0f;

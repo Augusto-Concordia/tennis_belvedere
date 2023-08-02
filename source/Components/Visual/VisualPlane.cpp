@@ -18,7 +18,7 @@ VisualPlane::VisualPlane(glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _sc
         0, 2, 3
     };
 
-    VisualObject::SetupGlBuffersVerticesNormalUv();
+    VisualObject::SetupGlBuffersVerticesNormalsUvsWithIndices();
 }
 
 void VisualPlane::Draw(const glm::mat4 &_viewProjection, const glm::vec3 &_cameraPosition, int _renderMode, const Shader::Material *material)
