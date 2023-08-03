@@ -162,6 +162,9 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .point_size = racket_point_size,
         .color = glm::vec3(0.58f, 0.38f, 0.24f),
         .lights = { main_light, secondary_light },
+        .texture = Texture::Library::CreateTexture("assets/tattoo.jpg"),
+        .texture_influence = 0.9f,
+        .texture_tiling = 1.0f / glm::vec2(1.0f, 5.0f),
         .shininess = 2,
     }); // skin
 
