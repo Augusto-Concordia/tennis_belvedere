@@ -174,6 +174,18 @@ glm::mat4 Camera::GetViewProjection() const {
     return projection_matrix * view_matrix;
 }
 
+glm::vec3 Camera::GetCamUp() const {
+    return cam_forward;
+}
+
+glm::vec3 Camera::GetCamRight() const {
+    return cam_right;
+}
+
+glm::vec3 Camera::GetCamForward() const {
+    return cam_forward;
+}
+
 void Camera::UpdateView() {
     float infinity = std::numeric_limits<float>::infinity();
 

@@ -12,6 +12,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     lights = std::make_shared<std::vector<Light>>();
     lights->emplace_back(glm::vec3(30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
     lights->emplace_back(glm::vec3(-30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
+    lights->emplace_back(glm::vec3(0.0f, 34.0f, 36.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 400.0f, 50.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -238,16 +239,16 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     // camera points of view
     cameras = std::vector<Transform>(3);
     cameras[0] = Transform(
-        glm::vec3(-35.0f, 20.0f, 0.0f),
-        glm::vec3(0.0f),
-        glm::vec3(1.0f),
-        rackets[0].position);
-
-    cameras[1] = Transform(
-        glm::vec3(35.0f, 20.0f, 0.0f),
+        glm::vec3(-10.0f, 10.0f, 0.0f),
         glm::vec3(0.0f),
         glm::vec3(1.0f),
         rackets[1].position);
+
+    cameras[1] = Transform(
+        glm::vec3(10.0f, 10.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(1.0f),
+        rackets[0].position);
 
     cameras[2] = Transform(
         glm::vec3(0.0f, 35.0f, 35.0f),
@@ -324,9 +325,10 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     // processes input
     InputCallback(_window, _deltaTime);
 
-    // SHADOW MAP PASS
+    // moves "flashlight"
+    lights->at(2).SetPosition(main_camera->GetPosition() + main_camera->GetCamRight() * -2.0f);
 
-    // Main Light
+    // SHADOW MAP PASS
 
     // binds the shadow map framebuffer and the depth texture to draw on it
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo);

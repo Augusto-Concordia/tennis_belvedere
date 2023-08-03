@@ -80,8 +80,17 @@ vec3 calculateSpotLight(Light light, vec4 fragPosLightSpace, int index) {
 
 //entrypoint
 void main() {
-    vec3 approximateAmbient = (u_lights[0].ambient_strength * u_lights[0].color + u_lights[1].ambient_strength * u_lights[1].color) / 2.0;
-    vec3 colorResult = (approximateAmbient + calculateSpotLight(u_lights[0], FragPosLightSpace[0], 0) + calculateSpotLight(u_lights[1], FragPosLightSpace[1], 1)) * vec3(mix(vec4(u_color, 1.0), texture(u_texture, FragUv), u_texture_influence)); //pure color or texture, mixed with lighting
+    vec3 approximateAmbient;
+    vec3 lightsColor;
+
+    for (int i; i < u_lights.length(); i++) {
+        approximateAmbient += (u_lights[i].ambient_strength * u_lights[i].color);
+        lightsColor += calculateSpotLight(u_lights[i], FragPosLightSpace[i], i);
+    }
+
+    approximateAmbient = approximateAmbient / u_lights.length();
+
+    vec3 colorResult = (approximateAmbient + lightsColor) * vec3(mix(vec4(u_color, 1.0), texture(u_texture, FragUv), u_texture_influence)); //pure color or texture, mixed with lighting
 
     out_color = vec4(colorResult, u_alpha);
 }

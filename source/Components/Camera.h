@@ -66,6 +66,10 @@ public:
     [[nodiscard]] glm::vec3 GetPosition() const;
     [[nodiscard]] glm::mat4 GetViewProjection() const;
 
+    [[nodiscard]] glm::vec3 GetCamUp() const;
+    [[nodiscard]] glm::vec3 GetCamRight() const;
+    [[nodiscard]] glm::vec3 GetCamForward() const;
+
 private:
     void UpdateView(); //for when the camera's rotation changes
     void UpdateProjection(); //for when the camera's viewport changes (mainly)
