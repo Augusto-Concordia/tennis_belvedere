@@ -682,6 +682,14 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
         selected_player = 2;
     }
 
+    if (Input::IsKeyReleased(_window, GLFW_KEY_L)) {
+        light_mode = !light_mode;
+
+        main_light->SetRange(light_mode ? 300.0f : 0.0f);
+
+        std::cout << main_light->range << std::endl;
+    }
+
     // sets focus on the selected transform
     const int *desired_keys = new int[5]{GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_M, GLFW_KEY_R};
     if (Input::IsAnyKeyPressed(_window, 5, desired_keys))
