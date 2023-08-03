@@ -1,4 +1,4 @@
-# tennis_triple_love
+# tennis_belvedere
 Quiz #2 - COMP 371
 
 ## Features
@@ -12,14 +12,14 @@ All depended upon libraries should already be included in the vendor folder.
 
 1. Generate project files with CMake
 2. Set the working directory to the root of the project
-3. Run the `tennis_triple_love` project!
+3. Run the `tennis_belvedere` project!
 
 ### From the git repository
 Similar to the above instructions, with the key difference being to clone the repository with `--recurse-submodules` to include the depended upon libraries.
 
 1. Generate project files with CMake
 2. Set the working directory to the root of the project
-3. Run the `tennis_triple_love` project!
+3. Run the `tennis_belvedere` project!
 
 ## Keybinds
 * `Home` & `Keypad 5`: Resets the camera's position & rotation
