@@ -7,7 +7,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     viewport_width = _initialWidth;
     viewport_height = _initialHeight;
 
-    main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 25.0f, 30.0f), glm::vec3(0.0f), viewport_width, viewport_height);
+    main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 35.0f, 35.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
     main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
 
@@ -92,7 +92,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     ground_plane = std::make_unique<VisualPlane>(glm::vec3(0.0f, -0.1f, 0.0f), glm::vec3(0.0f), glm::vec3(42.0f, 20.0f, 20.0f), world_t_material);
 
     tennis_balls = std::vector<VisualSphere>(3);
-    
+
     Shader::Material world_tennisfuzz_material = {
         .shader = lit_shader,
         .main_light = main_light,
@@ -145,9 +145,6 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     augusto_racket_cube = std::make_shared<VisualCube>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material);
     augusto_racket_materials = std::vector<Shader::Material>();
 
-    rackets = std::vector<Racket>(3);
-    default_rackets = std::vector<Racket>(3);
-
     augusto_racket_materials.push_back({
         .shader = lit_shader,
         .line_thickness = racket_line_thickness,
@@ -194,16 +191,43 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .shininess = 64,
     }); // racket net (white plastic)
 
-    // racket characteristics
-    rackets[0] = default_rackets[0] = Racket(
+    // racket positions
+    rackets = std::vector<Transform>(3);
+    default_rackets = std::vector<Transform>(3);
+    rackets[0] = default_rackets[0] = Transform(
         glm::vec3(-10.0f, 0.0f, 0.0f),
         glm::vec3(0.0f),
         glm::vec3(0.8f));
 
-    rackets[1] = default_rackets[1] = Racket(
-            glm::vec3(10.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f),
-            glm::vec3(0.8f));
+    rackets[1] = default_rackets[1] = Transform(
+        glm::vec3(10.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(0.8f));
+
+    rackets[2] = default_rackets[2] = Transform(
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(0.8f));
+
+    // camera points of view
+    cameras = std::vector<Transform>(3);
+    cameras[0] = Transform(
+        glm::vec3(-35.0f, 20.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(1.0f),
+        rackets[0].position);
+
+    cameras[1] = Transform(
+        glm::vec3(35.0f, 20.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(1.0f),
+        rackets[1].position);
+
+    cameras[2] = Transform(
+        glm::vec3(0.0f, 35.0f, 35.0f),
+        glm::vec3(0.0f),
+        glm::vec3(1.0f),
+        rackets[2].position);
 }
 
 void Renderer::Init() {
@@ -627,6 +651,12 @@ void Renderer::ResizeCallback(GLFWwindow *_window, int _displayWidth, int _displ
 
 void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
 {
+    // exit
+    if (Input::IsKeyReleased(_window, GLFW_KEY_ESCAPE))
+    {
+        glfwSetWindowShouldClose(_window, true);
+    }
+
     if (Input::IsKeyPressed(_window, GLFW_KEY_1))
     {
         selected_player = 0;
@@ -640,12 +670,24 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
         selected_player = 2;
     }
 
-    const int *desired_keys = new int[3]{GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3};
-    if (Input::IsAnyKeyPressed(_window, 3, desired_keys))
+    // loop through the camera positions
+    if (Input::IsKeyReleased(_window, GLFW_KEY_M))
     {
-        // sets focus on the selected player
-        main_camera->SetPosition(rackets[selected_player].position + glm::vec3(0.0f, 25.0f, 30.0f));
-        main_camera->SetTarget(rackets[selected_player].position);
+        selected_player = (selected_player + 1) % 3;
+    }
+
+    // reset the camera position
+    if (Input::IsKeyPressed(_window, GLFW_KEY_R))
+    {
+        selected_player = 2;
+    }
+
+    // sets focus on the selected transform
+    const int *desired_keys = new int[5]{GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_M, GLFW_KEY_R};
+    if (Input::IsAnyKeyPressed(_window, 5, desired_keys))
+    {
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
 
     // keyboard triggers

@@ -155,6 +155,7 @@ void Camera::SetDefaultPositionAndTarget() {
 
 void Camera::SetPosition(const glm::vec3 &_position) {
     cam_position = _position;
+    distance_to_target = glm::length(cam_position - cam_target);
 
     UpdateView();
 }

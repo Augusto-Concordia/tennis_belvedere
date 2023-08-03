@@ -17,14 +17,16 @@
 class Renderer
 {
 private:
-    struct Racket
+    struct Transform
     {
         glm::vec3 position;
         glm::vec3 rotation;
         glm::vec3 scale;
 
-        Racket() = default;
-        Racket(glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale) : position(_position), rotation(_rotation), scale(_scale) {}
+        glm::vec3 target;
+
+        Transform() = default;
+        Transform(glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale, glm::vec3 _target = glm::vec3(0.0f)) : position(_position), rotation(_rotation), scale(_scale), target(_target) {}
     };
 
     std::unique_ptr<Screen> main_screen;
@@ -51,14 +53,16 @@ private:
     std::shared_ptr<VisualCube> augusto_racket_cube;
     std::vector<Shader::Material> augusto_racket_materials;
 
-    std::vector<Racket> rackets;
-    std::vector<Racket> default_rackets;
+    std::vector<Transform> rackets;
+    std::vector<Transform> default_rackets;
+
+    std::vector<Transform> cameras;
 
     int viewport_width, viewport_height;
 
     bool shadow_mode = true;
     int racket_render_mode = GL_TRIANGLES;
-    int selected_player = 4;
+    int selected_player = 2;
 
     GLuint shadow_map_fbo = 0;
     GLuint shadow_map_depth_tex = 0;
