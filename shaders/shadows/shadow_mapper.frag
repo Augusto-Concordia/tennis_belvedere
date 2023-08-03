@@ -2,7 +2,7 @@
 
 #version 330 core
 
-in vec4 FragPos;
+in vec3 FragPos;
 
 layout(location = 0) out vec3 out_color; //rgba color output
 
