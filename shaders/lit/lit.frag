@@ -2,6 +2,14 @@
 
 #version 330 core
 
+/*struct Light {
+    vec3 position;
+    vec3 color;
+    vec3 attenuation;
+    vec3 spot_dir;
+    float spot_cutoff;
+};*/
+
 uniform vec3 u_cam_pos; //cam position
 
 uniform vec3 u_light_pos; //main light position

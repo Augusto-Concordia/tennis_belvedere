@@ -9,7 +9,8 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 35.0f, 35.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
-    main_light = std::make_unique<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
+    main_light = std::make_shared<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
+    secondary_light = std::make_shared<Light>(glm::vec3(0.0f, 34.0f, 36.0f), glm::vec3(0.99f, 0.95f, 0.88f), 0.2f, 0.4f, 300.0f, 30.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -24,7 +25,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material main_light_cube_material = {
         .shader = unlit_shader,
         .color = main_light->GetColor(),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
     };
     main_light_cube = std::make_unique<VisualCube>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3(0.0f), main_light_cube_material);
 
@@ -37,7 +38,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material default_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(1.0f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
     };
 
     // grid
@@ -83,7 +84,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     Shader::Material world_t_material = {
         .shader = lit_shader,
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/clay_texture.jpg"),
         .texture_influence = 1.0f,
         .shininess = 1,
@@ -93,7 +94,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     Shader::Material world_tennisfuzz_material = {
         .shader = lit_shader,
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/fuzz.jpg"),
         .texture_influence = 1.0f,
         .shininess = 1,
@@ -110,7 +111,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material netpost_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.51f, 0.53f, 0.53f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/metal.jpg"),
         .texture_influence = 1.0f,
         .texture_tiling = glm::vec2(1.0f, 1.0f / 8.0f),
@@ -121,7 +122,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material net_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.96f, 0.96f, 0.96f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .shininess = 128,
     };
     net_cubes[1] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, net_s_material); // net
@@ -129,7 +130,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material top_net_s_material = {
             .shader = lit_shader,
             .color = glm::vec3(0.96f, 0.96f, 0.96f),
-            .main_light = main_light,
+            .lights = { main_light, secondary_light },
             .texture = Texture::Library::CreateTexture("assets/fabric.jpg"),
             .texture_influence = 1.0f,
             .texture_tiling = 1.0f / glm::vec2(36.0f, 0.2f),
@@ -143,7 +144,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material a_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.15f, 0.92f, 0.17f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .shininess = 4,
     };
     letter_cubes[0] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, a_s_material); // letter a
@@ -160,7 +161,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .line_thickness = racket_line_thickness,
         .point_size = racket_point_size,
         .color = glm::vec3(0.58f, 0.38f, 0.24f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .shininess = 2,
     }); // skin
 
@@ -169,7 +170,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .line_thickness = racket_line_thickness,
         .point_size = racket_point_size,
         .color = glm::vec3(0.2f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
         .texture_influence = 0.7f,
         .shininess = 64,
@@ -180,7 +181,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .line_thickness = racket_line_thickness,
         .point_size = racket_point_size,
         .color = glm::vec3(0.1f, 0.2f, 0.9f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
         .texture_influence = 0.7f,
         .shininess = 64,
@@ -191,7 +192,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .line_thickness = racket_line_thickness,
         .point_size = racket_point_size,
         .color = glm::vec3(0.1f, 0.9f, 0.2f),
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
         .texture_influence = 0.7f,
         .shininess = 64,
@@ -203,7 +204,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .point_size = racket_point_size,
         .color = glm::vec3(0.94f),
         .alpha = 0.95f,
-        .main_light = main_light,
+        .lights = { main_light, secondary_light },
         .shininess = 128,
     }); // racket net (white plastic)
 

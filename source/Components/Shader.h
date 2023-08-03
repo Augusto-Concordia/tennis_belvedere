@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include "glad/glad.h" // include glad to get all the required OpenGL headers
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
@@ -46,7 +47,7 @@ public:
         glm::vec3 color = glm::vec3(1.0f);
         float alpha = 1.0f;
 
-        std::shared_ptr<Light> main_light = std::make_shared<Light>();
+        std::vector<std::shared_ptr<Light>> lights = std::vector<std::shared_ptr<Light>>();
 
         std::shared_ptr<Texture> texture = std::make_shared<Texture>(0, "", 0, 0, 0, 0);
         float texture_influence = 0.0f;
