@@ -91,8 +91,6 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     ground_plane = std::make_unique<VisualPlane>(glm::vec3(0.0f, -0.1f, 0.0f), glm::vec3(0.0f), glm::vec3(42.0f, 20.0f, 20.0f), world_t_material);
 
-    tennis_balls = std::vector<VisualSphere>(3);
-
     Shader::Material world_tennisfuzz_material = {
         .shader = lit_shader,
         .main_light = main_light,
@@ -101,9 +99,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .shininess = 1,
     };
 
-    tennis_balls[0] = VisualSphere(1.0, 3, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), world_tennisfuzz_material);
-    tennis_balls[1] = VisualSphere(1.0, 3, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), world_tennisfuzz_material);
-    tennis_balls[2] = VisualSphere(1.0, 3, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), world_tennisfuzz_material);
+    tennis_ball = std::make_unique<VisualSphere>(1.0f, 3, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.1f), world_tennisfuzz_material);
 
     // cube transform point offset (i.e. to scale it from the bottom-up)
     auto bottom_y_transform_offset = glm::vec3(0.0f, 0.5f, 0.0f);
@@ -174,8 +170,10 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .point_size = racket_point_size,
         .color = glm::vec3(0.2f),
         .main_light = main_light,
+        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+        .texture_influence = 0.7f,
         .shininess = 64,
-    }); // racket handle (black plastic)
+    }); // racket handle (black metal)
 
     augusto_racket_materials.push_back({
         .shader = lit_shader,
@@ -183,8 +181,10 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .point_size = racket_point_size,
         .color = glm::vec3(0.1f, 0.2f, 0.9f),
         .main_light = main_light,
+        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+        .texture_influence = 0.7f,
         .shininess = 64,
-    }); // racket piece (blue plastic)
+    }); // racket piece (blue metal)
 
     augusto_racket_materials.push_back({
         .shader = lit_shader,
@@ -192,8 +192,10 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .point_size = racket_point_size,
         .color = glm::vec3(0.1f, 0.9f, 0.2f),
         .main_light = main_light,
+        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+        .texture_influence = 0.7f,
         .shininess = 64,
-    }); // racket piece (green plastic)
+    }); // racket piece (green metal)
 
     augusto_racket_materials.push_back({
         .shader = lit_shader,
@@ -202,7 +204,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .color = glm::vec3(0.94f),
         .alpha = 0.95f,
         .main_light = main_light,
-        .shininess = 64,
+        .shininess = 128,
     }); // racket net (white plastic)
 
     // racket positions
@@ -454,8 +456,9 @@ void Renderer::DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotat
 
     // tennis ball
     glm::mat4 third_transform_matrix = world_transform_matrix;
-    third_transform_matrix = glm::translate(third_transform_matrix, glm::vec3(2.0f, 15.0f, 2.0f));
-    tennis_balls[0].DrawFromMatrix(_viewProjection, _eyePosition, third_transform_matrix, racket_render_mode, _materialOverride);
+    third_transform_matrix = glm::translate(third_transform_matrix, glm::vec3(1.0f, 14.0f, -3.0f));
+    third_transform_matrix = glm::scale(third_transform_matrix, glm::vec3(0.7f));
+    tennis_ball->DrawFromMatrix(_viewProjection, _eyePosition, third_transform_matrix, racket_render_mode, _materialOverride);
 
     // forearm (skin)
     world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(45.0f, 0.0f, 0.0f));

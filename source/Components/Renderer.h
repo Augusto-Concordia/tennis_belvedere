@@ -44,7 +44,7 @@ private:
     std::unique_ptr<VisualCube> world_cube;
     std::unique_ptr<VisualPlane> ground_plane;
 
-    std::vector<VisualSphere> tennis_balls;
+    std::unique_ptr<VisualSphere> tennis_ball;
 
     std::vector<VisualCube> net_cubes;
 
