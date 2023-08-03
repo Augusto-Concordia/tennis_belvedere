@@ -1,9 +1,12 @@
 #pragma once
 
+#include <vector>
+#include <memory>
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
+#include "glad/glad.h"
 
 class Light {
 public:
@@ -22,6 +25,8 @@ public:
 
     float ambient_strength = 0.1f;
     float specular_strength = 0.5f;
+
+    GLuint shadow_depth_texture;
 
     inline static int LIGHTMAP_SIZE = 2048;
     inline constexpr static float FOV = 90.0f;

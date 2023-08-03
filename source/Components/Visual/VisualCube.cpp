@@ -104,34 +104,30 @@ void VisualCube::DrawFromMatrix(const glm::mat4 &_viewProjection, const glm::vec
     current_material->shader->SetModelMatrix(_transformMatrix);
     current_material->shader->SetViewProjectionMatrix(_viewProjection);
 
-    current_material->shader->SetVec3("u_color", current_material->color);
-    current_material->shader->SetFloat("u_alpha", current_material->alpha);
-
+    // camera properties
     current_material->shader->SetVec3("u_cam_pos", _cameraPosition);
 
-    current_material->shader->SetVec3("u_light_pos", current_material->main_light->GetPosition());
-    current_material->shader->SetVec3("u_light_color", current_material->main_light->GetColor());
-    current_material->shader->SetVec3("u_spot_dir", current_material->main_light->GetSpotlightDirection());
-    current_material->shader->SetFloat("u_spot_cutoff", current_material->main_light->GetSpotlightCutoff());
+    // lights
+    current_material->shader->ApplyLightsToShader(current_material->lights);
 
-    current_material->shader->SetFloat("u_ambient_strength", current_material->main_light->ambient_strength);
-    current_material->shader->SetFloat("u_specular_strength", current_material->main_light->specular_strength);
+    // material properties
+    current_material->shader->SetVec3("u_color", current_material->color);
+    current_material->shader->SetFloat("u_alpha", current_material->alpha);
     current_material->shader->SetInt("u_shininess", current_material->shininess);
 
-    current_material->shader->SetFloat("u_shadows_influence", 1.0f - (float)current_material->main_light->project_shadows);
-    current_material->shader->SetMat4("u_light_view_projection", current_material->main_light->GetViewProjection());
-    current_material->shader->SetTexture("u_depth_texture", 0);
-
-    current_material->texture->Use(GL_TEXTURE1);
-
-    current_material->shader->SetFloat("u_texture_influence", current_material->texture_influence);
-    current_material->shader->SetTexture("u_texture", 1);
+    // texture mapping & consumption
+    current_material->texture->Use(GL_TEXTURE0);
+    current_material->shader->SetFloatFast("u_texture_influence", current_material->texture_influence);
+    current_material->shader->SetTexture("u_texture", 0);
     current_material->shader->SetVec2("u_texture_tiling", current_material->texture_tiling);
 
+    // line & point properties
     glLineWidth(current_material->line_thickness);
     glPointSize(current_material->point_size);
 
     // draw vertices according to their indices
     glDrawArrays(_renderMode, 0, vertices.size());
+
+    // clear the current texture
     current_material->texture->Clear();
 }

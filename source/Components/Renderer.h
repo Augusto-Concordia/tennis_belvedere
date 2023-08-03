@@ -67,7 +67,6 @@ private:
     int selected_player = 2;
 
     GLuint shadow_map_fbo = 0;
-    GLuint shadow_map_depth_tex = 0;
 
 public:
     Renderer(int _initialWidth, int _initialHeight);

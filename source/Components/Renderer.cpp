@@ -10,7 +10,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 35.0f, 35.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
     main_light = std::make_shared<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
-    secondary_light = std::make_shared<Light>(glm::vec3(0.0f, 34.0f, 36.0f), glm::vec3(0.99f, 0.95f, 0.88f), 0.2f, 0.4f, 300.0f, 30.0f);
+    secondary_light = std::make_shared<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -259,9 +259,9 @@ void Renderer::Init() {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // initializes the shadow map depth texture
-    glGenTextures(1, &shadow_map_depth_tex);
-    glBindTexture(GL_TEXTURE_2D, shadow_map_depth_tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glGenTextures(1, &main_light->shadow_depth_texture);
+    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, 0, GL_RGB, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -276,14 +276,36 @@ void Renderer::Init() {
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // binds the shadow map depth texture to the framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_depth_tex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, main_light->shadow_depth_texture, 0);
+
+    // cleanup the texture bind
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // initializes the shadow map depth texture
+    glGenTextures(1, &secondary_light->shadow_depth_texture);
+    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, 0, GL_RGBA, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // the following 2 blocks mitigate shadow map artifacts, coming from: https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
+    // when sampling outside, we don't want a repeating pattern
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // sets the border color to white, so that the shadow map is white outside the light's view (i.e. no shadow)
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    // binds the shadow map depth texture to the framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, secondary_light->shadow_depth_texture, 0);
 
     // cleanup the texture bind
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // disable color draw & read buffer for this framebuffer
-    glReadBuffer(GL_NONE);
-    glDrawBuffer(GL_NONE);
+    //glReadBuffer(GL_NONE);
+    //glDrawBuffer(GL_NONE);
 
     // checks if the framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -303,15 +325,20 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     main_light->SetPosition(glm::vec3(30.0f, 10.0f, 0.0f));
     main_light->SetTarget(glm::vec3(0.0f, 5.0f, 0.0f));
 
+    secondary_light->SetPosition(glm::vec3(-30.0f, 10.0f, 0.0f));
+    secondary_light->SetTarget(glm::vec3(0.0f, 5.0f, 0.0f));
+
     // SHADOW MAP PASS
+
+    // Main Light
 
     // binds the shadow map framebuffer and the depth texture to draw on it
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo);
     glViewport(0, 0, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE);
-    glBindTexture(GL_TEXTURE_2D, shadow_map_depth_tex);
+    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
 
     // clears the depth canvas to black
-    glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (shadow_mode) {
         // draws the net
@@ -322,6 +349,42 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
         DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
 
         ground_plane->Draw(main_light->GetViewProjection(), main_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+
+        // draws the net
+        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+
+        // draws the rackets
+        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+
+        ground_plane->Draw(main_light->GetViewProjection(), main_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+    }
+
+    // Second Light
+
+    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
+
+    // clears the depth canvas to black
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (shadow_mode) {
+        // draws the net
+        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
+
+        // draws the rackets
+        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
+        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, secondary_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+
+        ground_plane->Draw(secondary_light->GetViewProjection(), secondary_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+
+        // draws the net
+        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
+
+        // draws the rackets
+        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
+        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, secondary_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+
+        ground_plane->Draw(secondary_light->GetViewProjection(), secondary_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
     }
 
     // unbind the current texture & framebuffer
@@ -334,8 +397,11 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     glViewport(0, 0, viewport_width, viewport_height);
 
     // activates the shadow map depth texture & binds it to the first texture unit, so that it can be used by the lit shader
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, shadow_map_depth_tex);
+    glActiveTexture(GL_TEXTURE15);
+    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
+
+    glActiveTexture(GL_TEXTURE16);
+    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
 
     // clears the color & depth canvas to black
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -345,6 +411,8 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
 
     // draws the main light cube
     main_light_cube->position = main_light->GetPosition();
+    main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
+    main_light_cube->position = secondary_light->GetPosition();
     main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the main grid

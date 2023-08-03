@@ -84,5 +84,7 @@ public:
     void SetTexture(const char *_name, GLint _value) const; // utility function to set a texture
     void SetModelMatrix(const glm::mat4& _transform) const; // utility function to set model matrix
     void SetViewProjectionMatrix(const glm::mat4& _transform) const; // utility function to set projection matrix
+
+    void ApplyLightsToShader(const std::vector<std::shared_ptr<Light>> _lights) const;
 };
 
