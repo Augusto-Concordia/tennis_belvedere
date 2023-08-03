@@ -47,7 +47,7 @@ public:
         glm::vec3 color = glm::vec3(1.0f);
         float alpha = 1.0f;
 
-        std::vector<std::shared_ptr<Light>> lights = std::vector<std::shared_ptr<Light>>();
+        std::shared_ptr<std::vector<Light>> lights = std::make_shared<std::vector<Light>>();
 
         std::shared_ptr<Texture> texture = std::make_shared<Texture>(0, "", 0, 0, 0, 0);
         float texture_influence = 0.0f;
@@ -85,6 +85,6 @@ public:
     void SetModelMatrix(const glm::mat4& _transform) const; // utility function to set model matrix
     void SetViewProjectionMatrix(const glm::mat4& _transform) const; // utility function to set projection matrix
 
-    void ApplyLightsToShader(const std::vector<std::shared_ptr<Light>> _lights) const;
+    void ApplyLightsToShader(const std::shared_ptr<std::vector<Light>> _lights) const; // utility function to set light information
 };
 

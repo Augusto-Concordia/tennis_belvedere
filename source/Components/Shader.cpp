@@ -58,30 +58,28 @@ void Shader::SetViewProjectionMatrix(const glm::mat4 &_transform) const {
     glProgramUniformMatrix4fv(program_id, glGetUniformLocation(program_id, "u_view_projection"), 1, GL_FALSE, glm::value_ptr(_transform));
 }
 
-void Shader::ApplyLightsToShader(const std::vector<std::shared_ptr<Light>> _lights) const {
-    const auto j = _lights.size();
+void Shader::ApplyLightsToShader(const std::shared_ptr<std::vector<Light>> _lights) const {
+    // shadow map consumption
+    SetTexture("u_depth_texture", 0);
 
-    for (int i = 0; i < _lights.size(); ++i) {
-        const auto& light = _lights[i];
+    for (int i = 0; i < _lights->size(); ++i) {
+        const auto& light = _lights->at(i);
         const auto i_string = std::to_string(i);
 
-        SetVec3(("u_lights[" + i_string + "].position").c_str(), light->GetPosition());
-        SetVec3(("u_lights[" + i_string + "].color").c_str(), light->GetColor());
+        SetVec3(("u_lights[" + i_string + "].position").c_str(), light.GetPosition());
+        SetVec3(("u_lights[" + i_string + "].color").c_str(), light.GetColor());
 
-        SetFloatFast(("u_lights[" + i_string + "].point_spot_influence").c_str(), light->type == Light::Type::POINT ? 0.0f : 1.0f);
-        SetFloatFast(("u_lights[" + i_string + "].shadows_influence").c_str(), 1.0f - (float)light->project_shadows);
-        SetVec3(("u_lights[" + i_string + "].attenuation").c_str(), light->attenuation);
+        SetFloatFast(("u_lights[" + i_string + "].point_spot_influence").c_str(), light.type == Light::Type::POINT ? 0.0f : 1.0f);
+        SetFloatFast(("u_lights[" + i_string + "].shadows_influence").c_str(), 1.0f - (float)light.project_shadows);
+        SetVec3(("u_lights[" + i_string + "].attenuation").c_str(), light.attenuation);
 
-        SetFloatFast(("u_lights[" + i_string + "].ambient_strength").c_str(), light->ambient_strength);
-        SetFloatFast(("u_lights[" + i_string + "].specular_strength").c_str(), light->specular_strength);
+        SetFloatFast(("u_lights[" + i_string + "].ambient_strength").c_str(), light.ambient_strength);
+        SetFloatFast(("u_lights[" + i_string + "].specular_strength").c_str(), light.specular_strength);
 
-        SetVec3(("u_lights[" + i_string + "].spot_dir").c_str(), light->GetSpotlightDirection());
-        SetFloatFast(("u_lights[" + i_string + "].spot_cutoff").c_str(), light->GetSpotlightCutoff());
+        SetVec3(("u_lights[" + i_string + "].spot_dir").c_str(), light.GetSpotlightDirection());
+        SetFloatFast(("u_lights[" + i_string + "].spot_cutoff").c_str(), light.GetSpotlightCutoff());
 
-        SetMat4(("u_lights[" + i_string + "].light_view_projection").c_str(), light->GetViewProjection());
-
-        // shadow map consumption
-        SetTexture(("u_lights[" + i_string + "].depth_texture").c_str(), 15 + i);
+        SetMat4(("u_lights[" + i_string + "].light_view_projection").c_str(), light.GetViewProjection());
     }
 }
 

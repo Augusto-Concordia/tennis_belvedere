@@ -9,8 +9,9 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 35.0f, 35.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
-    main_light = std::make_shared<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
-    secondary_light = std::make_shared<Light>(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
+    lights = std::make_shared<std::vector<Light>>();
+    lights->emplace_back(glm::vec3(30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
+    lights->emplace_back(glm::vec3(-30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -24,8 +25,8 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     Shader::Material main_light_cube_material = {
         .shader = unlit_shader,
-        .color = main_light->GetColor(),
-        .lights = { main_light, secondary_light },
+        .color = lights->at(0).GetColor(),
+        .lights = lights,
     };
     main_light_cube = std::make_unique<VisualCube>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3(0.0f), main_light_cube_material);
 
@@ -38,7 +39,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material default_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(1.0f),
-        .lights = { main_light, secondary_light },
+        .lights = lights,
     };
 
     // grid
@@ -84,7 +85,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     Shader::Material world_t_material = {
         .shader = lit_shader,
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .texture = Texture::Library::CreateTexture("assets/clay_texture.jpg"),
         .texture_influence = 1.0f,
         .shininess = 1,
@@ -94,7 +95,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
 
     Shader::Material world_tennisfuzz_material = {
         .shader = lit_shader,
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .texture = Texture::Library::CreateTexture("assets/fuzz.jpg"),
         .texture_influence = 1.0f,
         .shininess = 1,
@@ -111,7 +112,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material netpost_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.51f, 0.53f, 0.53f),
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .texture = Texture::Library::CreateTexture("assets/metal.jpg"),
         .texture_influence = 1.0f,
         .texture_tiling = glm::vec2(1.0f, 1.0f / 8.0f),
@@ -122,7 +123,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material net_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.96f, 0.96f, 0.96f),
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .shininess = 128,
     };
     net_cubes[1] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, net_s_material); // net
@@ -130,7 +131,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material top_net_s_material = {
             .shader = lit_shader,
             .color = glm::vec3(0.96f, 0.96f, 0.96f),
-            .lights = { main_light, secondary_light },
+            .lights = lights,
             .texture = Texture::Library::CreateTexture("assets/fabric.jpg"),
             .texture_influence = 1.0f,
             .texture_tiling = 1.0f / glm::vec2(36.0f, 0.2f),
@@ -144,7 +145,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material a_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.15f, 0.92f, 0.17f),
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .shininess = 4,
     };
     letter_cubes[0] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, a_s_material); // letter a
@@ -156,60 +157,65 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     augusto_racket_cube = std::make_shared<VisualCube>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, default_s_material);
     augusto_racket_materials = std::vector<Shader::Material>();
 
-    augusto_racket_materials.push_back({
+    Shader::Material skin_material = {
         .shader = lit_shader,
         .line_thickness = racket_line_thickness,
         .point_size = racket_point_size,
         .color = glm::vec3(0.58f, 0.38f, 0.24f),
-        .lights = { main_light, secondary_light },
+        .lights = lights,
         .texture = Texture::Library::CreateTexture("assets/tattoo.jpg"),
         .texture_influence = 0.9f,
         .texture_tiling = 1.0f / glm::vec2(1.0f, 5.0f),
         .shininess = 2,
-    }); // skin
+    };
+    augusto_racket_materials.push_back(skin_material); // skin
 
-    augusto_racket_materials.push_back({
-        .shader = lit_shader,
-        .line_thickness = racket_line_thickness,
-        .point_size = racket_point_size,
-        .color = glm::vec3(0.2f),
-        .lights = { main_light, secondary_light },
-        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
-        .texture_influence = 0.7f,
-        .shininess = 64,
-    }); // racket handle (black metal)
+    Shader::Material black_metal_material = {
+            .shader = lit_shader,
+            .line_thickness = racket_line_thickness,
+            .point_size = racket_point_size,
+            .color = glm::vec3(0.2f),
+            .lights = lights,
+            .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+            .texture_influence = 0.7f,
+            .shininess = 64,
+    };
+    augusto_racket_materials.push_back(black_metal_material); // racket handle (black metal)
 
-    augusto_racket_materials.push_back({
-        .shader = lit_shader,
-        .line_thickness = racket_line_thickness,
-        .point_size = racket_point_size,
-        .color = glm::vec3(0.1f, 0.2f, 0.9f),
-        .lights = { main_light, secondary_light },
-        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
-        .texture_influence = 0.7f,
-        .shininess = 64,
-    }); // racket piece (blue metal)
+    Shader::Material blue_metal_material = {
+            .shader = lit_shader,
+            .line_thickness = racket_line_thickness,
+            .point_size = racket_point_size,
+            .color = glm::vec3(0.1f, 0.2f, 0.9f),
+            .lights = lights,
+            .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+            .texture_influence = 0.7f,
+            .shininess = 64,
+    };
+    augusto_racket_materials.push_back(blue_metal_material); // racket piece (blue metal)
 
-    augusto_racket_materials.push_back({
-        .shader = lit_shader,
-        .line_thickness = racket_line_thickness,
-        .point_size = racket_point_size,
-        .color = glm::vec3(0.1f, 0.9f, 0.2f),
-        .lights = { main_light, secondary_light },
-        .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
-        .texture_influence = 0.7f,
-        .shininess = 64,
-    }); // racket piece (green metal)
+    Shader::Material green_metal_material = {
+            .shader = lit_shader,
+            .line_thickness = racket_line_thickness,
+            .point_size = racket_point_size,
+            .color = glm::vec3(0.1f, 0.9f, 0.2f),
+            .lights = lights,
+            .texture = Texture::Library::CreateTexture("assets/rust.jpg"),
+            .texture_influence = 0.7f,
+            .shininess = 64,
+    };
+    augusto_racket_materials.push_back(green_metal_material); // racket piece (green metal)
 
-    augusto_racket_materials.push_back({
-        .shader = lit_shader,
-        .line_thickness = racket_line_thickness,
-        .point_size = racket_point_size,
-        .color = glm::vec3(0.94f),
-        .alpha = 0.95f,
-        .lights = { main_light, secondary_light },
-        .shininess = 128,
-    }); // racket net (white plastic)
+    Shader::Material white_plastic_material = {
+            .shader = lit_shader,
+            .line_thickness = racket_line_thickness,
+            .point_size = racket_point_size,
+            .color = glm::vec3(0.94f),
+            .alpha = 0.95f,
+            .lights = lights,
+            .shininess = 128,
+    };
+    augusto_racket_materials.push_back(white_plastic_material); // racket net (white plastic)
 
     // racket positions
     rackets = std::vector<Transform>(3);
@@ -255,61 +261,59 @@ void Renderer::Init() {
     glGenFramebuffers(1, &shadow_map_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo);
 
-    // cleanup the texture bind
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     // initializes the shadow map depth texture
-    glGenTextures(1, &main_light->shadow_depth_texture);
-    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, 0, GL_RGB, GL_FLOAT, nullptr);
+    glGenTextures(1, &shadow_map_texture);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map_texture);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    // the following 2 blocks mitigate shadow map artifacts, coming from: https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
-    // when sampling outside, we don't want a repeating pattern
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    // sets the texture parameters
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // sets the border color to white, so that the shadow map is white outside the light's view (i.e. no shadow)
     float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-    // binds the shadow map depth texture to the framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, main_light->shadow_depth_texture, 0);
-
-    // cleanup the texture bind
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // initializes the shadow map depth texture
-    glGenTextures(1, &secondary_light->shadow_depth_texture);
-    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, 0, GL_RGBA, GL_FLOAT, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // the following 2 blocks mitigate shadow map artifacts, coming from: https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
     // when sampling outside, we don't want a repeating pattern
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    // sets the border color to white, so that the shadow map is white outside the light's view (i.e. no shadow)
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, (GLint)lights->size());
 
     // binds the shadow map depth texture to the framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, secondary_light->shadow_depth_texture, 0);
-
-    // cleanup the texture bind
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, shadow_map_texture, 0, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadow_map_texture, 0);
 
     // disable color draw & read buffer for this framebuffer
-    //glReadBuffer(GL_NONE);
-    //glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glDrawBuffer(GL_NONE);
 
     // checks if the framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR -> Framebuffer is not complete!" << std::endl;
+    {
+        std::cerr << "ERROR -> Framebuffer is not complete! (" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "): ";
+
+        switch (glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
+            case GL_FRAMEBUFFER_UNDEFINED:
+                std::cerr << "GL_FRAMEBUFFER_UNDEFINED" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                std::cerr << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+                std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << std::endl;
+                break;
+            default:
+                std::cerr << "Unknown error" << std::endl;
+                break;
+        }
+    }
 
     // cleanup the framebuffer bind
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -320,14 +324,6 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     // processes input
     InputCallback(_window, _deltaTime);
 
-    // moves the main light
-    auto light_turning_radius = 4.0f;
-    main_light->SetPosition(glm::vec3(30.0f, 10.0f, 0.0f));
-    main_light->SetTarget(glm::vec3(0.0f, 5.0f, 0.0f));
-
-    secondary_light->SetPosition(glm::vec3(-30.0f, 10.0f, 0.0f));
-    secondary_light->SetTarget(glm::vec3(0.0f, 5.0f, 0.0f));
-
     // SHADOW MAP PASS
 
     // Main Light
@@ -335,60 +331,38 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     // binds the shadow map framebuffer and the depth texture to draw on it
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo);
     glViewport(0, 0, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE);
-    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
 
-    // clears the depth canvas to black
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    for (int i = 0; i < lights->size(); ++i) {
+        const auto& light = lights->at(i);
 
-    if (shadow_mode) {
-        // draws the net
-        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadow_map_texture, 0, i);
 
-        // draws the rackets
-        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
-        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+        // clears the depth canvas to black
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        ground_plane->Draw(main_light->GetViewProjection(), main_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+        if (shadow_mode) {
+            // draws the net
+            DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
 
-        // draws the net
-        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+            // draws the rackets
+            DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
+            DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
 
-        // draws the rackets
-        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
-        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
+            ground_plane->Draw(light.GetViewProjection(), light.GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
 
-        ground_plane->Draw(main_light->GetViewProjection(), main_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+            // draws the net
+            DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
+
+            // draws the rackets
+            DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
+
+            DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
+            ground_plane->Draw(light.GetViewProjection(), light.GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
+        }
     }
 
-    // Second Light
-
-    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
-
-    // clears the depth canvas to black
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    if (shadow_mode) {
-        // draws the net
-        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
-
-        // draws the rackets
-        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
-        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, secondary_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
-
-        ground_plane->Draw(secondary_light->GetViewProjection(), secondary_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
-
-        // draws the net
-        DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
-
-        // draws the rackets
-        DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, secondary_light->GetViewProjection(), secondary_light->GetPosition(), shadow_mapper_material.get());
-        DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, secondary_light->GetViewProjection(), main_light->GetPosition(), shadow_mapper_material.get());
-
-        ground_plane->Draw(secondary_light->GetViewProjection(), secondary_light->GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
-    }
-
-    // unbind the current texture & framebuffer
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // unbind the shadow map texture & framebuffer
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // COLOR PASS
@@ -397,11 +371,8 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     glViewport(0, 0, viewport_width, viewport_height);
 
     // activates the shadow map depth texture & binds it to the first texture unit, so that it can be used by the lit shader
-    glActiveTexture(GL_TEXTURE15);
-    glBindTexture(GL_TEXTURE_2D, main_light->shadow_depth_texture);
-
-    glActiveTexture(GL_TEXTURE16);
-    glBindTexture(GL_TEXTURE_2D, secondary_light->shadow_depth_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map_texture);
 
     // clears the color & depth canvas to black
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -410,10 +381,10 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the main light cube
-    main_light_cube->position = main_light->GetPosition();
-    main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
-    main_light_cube->position = secondary_light->GetPosition();
-    main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
+    for (const auto& light: *lights) {
+        main_light_cube->position = light.GetPosition();
+        main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
+    }
 
     // draws the main grid
     main_grid->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
@@ -780,7 +751,9 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
     if (Input::IsKeyReleased(_window, GLFW_KEY_L)) {
         light_mode = !light_mode;
 
-        main_light->SetRange(light_mode ? 300.0f : 0.0f);
+        for (auto& light: *lights) {
+            light.SetRange(light_mode ? 300.0f : 0.0f);
+        }
     }
 
     // sets focus on the selected transform
@@ -797,7 +770,9 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
     {
         shadow_mode = !shadow_mode;
 
-        main_light->project_shadows = shadow_mode;
+        for (auto& light: *lights) {
+            light.project_shadows = shadow_mode;
+        }
     }
 
     // model transforms

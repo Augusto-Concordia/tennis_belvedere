@@ -17,7 +17,6 @@ struct Light {
     float spot_cutoff;
 
     mat4 light_view_projection;
-    sampler2D depth_texture;
 };
 
 uniform Light u_lights[3];

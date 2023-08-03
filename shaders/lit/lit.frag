@@ -17,12 +17,12 @@ struct Light {
     float spot_cutoff;
 
     mat4 light_view_projection;
-    sampler2D depth_texture;
 };
 
 uniform vec3 u_cam_pos; //cam position
 
 uniform Light u_lights[3];
+uniform sampler2DArray u_depth_texture;
 
 uniform vec3 u_color; //color
 uniform float u_alpha; //opacity
@@ -40,7 +40,7 @@ in vec2 FragUv;
 
 layout(location = 0) out vec4 out_color; //rgba color output
 
-vec3 calculateSpotLight(Light light, vec4 fragPosLightSpace) {
+vec3 calculateSpotLight(Light light, vec4 fragPosLightSpace, int index) {
     //diffuse lighting calculation
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragPos);
@@ -64,7 +64,7 @@ vec3 calculateSpotLight(Light light, vec4 fragPosLightSpace) {
     projectedCoords = projectedCoords * 0.5 + 0.5;
 
     // get closest depth value from light's perspective (using [0,1] range LightSpaceFragPos as coords)
-    float closestDepth = texture(light.depth_texture, projectedCoords.xy).r;
+    float closestDepth = texture(u_depth_texture, vec3(projectedCoords.xy, index)).r;
 
     // get current linear depth as stored in the depth buffer
     float currentDepth = projectedCoords.z;
@@ -81,7 +81,7 @@ vec3 calculateSpotLight(Light light, vec4 fragPosLightSpace) {
 //entrypoint
 void main() {
     vec3 approximateAmbient = (u_lights[0].ambient_strength * u_lights[0].color + u_lights[1].ambient_strength * u_lights[1].color) / 2.0;
-    vec3 colorResult = (approximateAmbient + calculateSpotLight(u_lights[0], FragPosLightSpace[0]) + calculateSpotLight(u_lights[1], FragPosLightSpace[1])) * vec3(mix(vec4(u_color, 1.0), texture(u_texture, FragUv), u_texture_influence)); //pure color or texture, mixed with lighting
+    vec3 colorResult = (approximateAmbient + calculateSpotLight(u_lights[0], FragPosLightSpace[0], 0) + calculateSpotLight(u_lights[1], FragPosLightSpace[1], 1)) * vec3(mix(vec4(u_color, 1.0), texture(u_texture, FragUv), u_texture_influence)); //pure color or texture, mixed with lighting
 
     out_color = vec4(colorResult, u_alpha);
 }

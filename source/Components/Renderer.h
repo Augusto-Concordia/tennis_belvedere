@@ -39,8 +39,7 @@ private:
     std::unique_ptr<VisualLine> main_y_line;
     std::unique_ptr<VisualLine> main_z_line;
 
-    std::shared_ptr<Light> main_light;
-    std::shared_ptr<Light> secondary_light;
+    std::shared_ptr<std::vector<Light>> lights;
     std::unique_ptr<VisualCube> main_light_cube;
     std::unique_ptr<VisualCube> world_cube;
     std::unique_ptr<VisualPlane> ground_plane;
@@ -67,6 +66,7 @@ private:
     int selected_player = 2;
 
     GLuint shadow_map_fbo = 0;
+    GLuint shadow_map_texture = 0;
 
 public:
     Renderer(int _initialWidth, int _initialHeight);

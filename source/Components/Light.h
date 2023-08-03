@@ -26,8 +26,6 @@ public:
     float ambient_strength = 0.1f;
     float specular_strength = 0.5f;
 
-    GLuint shadow_depth_texture;
-
     inline static int LIGHTMAP_SIZE = 2048;
     inline constexpr static float FOV = 90.0f;
     inline constexpr static float NEAR_PLANE = 0.1f;
