@@ -30,6 +30,10 @@ void Shader::SetVec2(const char *_name, float _valueX, float _valueY) const {
     glProgramUniform2f(program_id, glGetUniformLocation(program_id, _name), _valueX, _valueY);
 }
 
+void Shader::SetVec2(const char *_name, const glm::vec2 &_value) const {
+    glProgramUniform2f(program_id, glGetUniformLocation(program_id, _name), _value.x, _value.y);
+}
+
 void Shader::SetVec3(const char *_name, float _valueX, float _valueY, float _valueZ) const {
     glProgramUniform3f(program_id, glGetUniformLocation(program_id, _name), _valueX, _valueY, _valueZ);
 }

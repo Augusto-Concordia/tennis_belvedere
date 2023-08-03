@@ -50,6 +50,7 @@ public:
 
         std::shared_ptr<Texture> texture = std::make_shared<Texture>(0, "", 0, 0, 0, 0);
         float texture_influence = 0.0f;
+        glm::vec2 texture_tiling = glm::vec2(1.0f);
 
         int shininess = 32;
     };
@@ -71,6 +72,7 @@ public:
     void SetFloatFast(const char *_name, float _value) const; // utility function to set a flow value on an active program
 
     void SetVec2(const char *_name, float _valueX, float _valueY) const; // utility function to set a vector 2
+    void SetVec2(const char *_name, const glm::vec2& _value) const; // utility function to set a vector 2
 
     // utility functions to set a vector 3
     void SetVec3(const char *_name, float _valueX, float _valueY, float _valueZ) const;

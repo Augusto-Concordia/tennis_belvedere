@@ -43,8 +43,8 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     // grid
     Shader::Material grid_s_material = {
         .shader = grid_shader,
-        .alpha = 0.4f,
-        .texture_influence = 0.0f
+        .color = glm::vec3(0.3f),
+        .alpha = 0.9f,
     };
     main_grid = std::make_unique<VisualGrid>(78, 36, 1.0f, glm::vec3(0.0f), glm::vec3(90.0f, 0.0f, 0.0f), grid_s_material);
 
@@ -109,12 +109,15 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     auto bottom_y_transform_offset = glm::vec3(0.0f, 0.5f, 0.0f);
 
     // net
-    net_cubes = std::vector<VisualCube>(2);
+    net_cubes = std::vector<VisualCube>(3);
 
     Shader::Material netpost_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.51f, 0.53f, 0.53f),
         .main_light = main_light,
+        .texture = Texture::Library::CreateTexture("assets/metal.jpg"),
+        .texture_influence = 1.0f,
+        .texture_tiling = glm::vec2(1.0f, 1.0f / 8.0f),
         .shininess = 4,
     };
     net_cubes[0] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, netpost_s_material); // net post
@@ -126,6 +129,17 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         .shininess = 128,
     };
     net_cubes[1] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, net_s_material); // net
+
+    Shader::Material top_net_s_material = {
+            .shader = lit_shader,
+            .color = glm::vec3(0.96f, 0.96f, 0.96f),
+            .main_light = main_light,
+            .texture = Texture::Library::CreateTexture("assets/fabric.jpg"),
+            .texture_influence = 1.0f,
+            .texture_tiling = 1.0f / glm::vec2(36.0f, 0.2f),
+            .shininess = 128,
+    };
+    net_cubes[2] = VisualCube(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), bottom_y_transform_offset, top_net_s_material); // top net
 
     // letters
     letter_cubes = std::vector<VisualCube>(4);
@@ -370,13 +384,19 @@ void Renderer::DrawOneNet(const glm::vec3 &_position, const glm::vec3 &_rotation
     scale_factor = glm::vec3(0.2f, 36.0f, 0.2f);
     world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(-90.0f, 0.0f, 0.0f));
 
-    for (int i = 0; i < h_net_count; ++i)
+    for (int i = 0; i < h_net_count - 1; ++i)
     {
         world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
         world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
         net_cubes[1].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix,  GL_TRIANGLES, _materialOverride);
         world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
     }
+
+    // first horizontal net (top)
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    net_cubes[2].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix,  GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
 
     // vertical net
     auto v_net_count = 36;
@@ -686,8 +706,6 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
         light_mode = !light_mode;
 
         main_light->SetRange(light_mode ? 300.0f : 0.0f);
-
-        std::cout << main_light->range << std::endl;
     }
 
     // sets focus on the selected transform
@@ -699,20 +717,6 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
     }
 
     // keyboard triggers
-    // render mode
-    if (Input::IsKeyPressed(_window, GLFW_KEY_P))
-    {
-        racket_render_mode = GL_POINTS;
-    }
-    else if (Input::IsKeyPressed(_window, GLFW_KEY_L))
-    {
-        racket_render_mode = GL_LINE_LOOP;
-    }
-    else if (Input::IsKeyPressed(_window, GLFW_KEY_T))
-    {
-        racket_render_mode = GL_TRIANGLES;
-    }
-
     //shadows
     if (Input::IsKeyReleased(_window, GLFW_KEY_B))
     {

@@ -126,6 +126,7 @@ void VisualCube::DrawFromMatrix(const glm::mat4 &_viewProjection, const glm::vec
 
     current_material->shader->SetFloat("u_texture_influence", current_material->texture_influence);
     current_material->shader->SetTexture("u_texture", 1);
+    current_material->shader->SetVec2("u_texture_tiling", current_material->texture_tiling);
 
     glLineWidth(current_material->line_thickness);
     glPointSize(current_material->point_size);
