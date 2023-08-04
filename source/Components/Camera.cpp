@@ -175,7 +175,7 @@ glm::mat4 Camera::GetViewProjection() const {
 }
 
 glm::vec3 Camera::GetCamUp() const {
-    return cam_forward;
+    return cam_up;
 }
 
 glm::vec3 Camera::GetCamRight() const {

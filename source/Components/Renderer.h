@@ -75,10 +75,22 @@ public:
     void Render(GLFWwindow *_window, double _deltaTime);
 
     void DrawOneNet(const glm::vec3 &_position, const glm::vec3 &_rotation, const glm::vec3 &_scale, const glm::mat4& _viewProjection, const glm::vec3& _eyePosition, const Shader::Material *_materialOverride = nullptr);
-    void DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotation, const glm::vec3 &_scale, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride = nullptr);
+    void DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotation, const glm::vec3 &_scale, const glm::mat4 &_viewProjection, const glm::vec3 &_eyePosition, int _player, const Shader::Material *_materialOverride = nullptr);
 
     void DrawOneA(glm::mat4 world_transform_matrix, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride = nullptr);
 
     void ResizeCallback(GLFWwindow *_window, int _displayWidth, int _displayHeight);
     void InputCallback(GLFWwindow *_window, double _deltaTime);
+
+    void DrawOneP(glm::mat4 world_transform_matrix, const glm::mat4 &_viewProjection, const glm::vec3 &_eyePosition,
+                  const Shader::Material *_materialOverride);
+
+    void DrawOneI(glm::mat4 world_transform_matrix, const glm::mat4 &_viewProjection, const glm::vec3 &_eyePosition,
+                  const Shader::Material *_materialOverride);
+
+    void DrawOneN(glm::mat4 world_transform_matrix, const glm::mat4 &_viewProjection, const glm::vec3 &_eyePosition,
+                  const Shader::Material *_materialOverride);
+
+    void DrawOneH(glm::mat4 world_transform_matrix, const glm::mat4 &_viewProjection, const glm::vec3 &_eyePosition,
+                  const Shader::Material *_materialOverride);
 };

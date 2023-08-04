@@ -10,9 +10,10 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     main_camera = std::make_unique<Camera>(glm::vec3(0.0f, 35.0f, 35.0f), glm::vec3(0.0f), viewport_width, viewport_height);
 
     lights = std::make_shared<std::vector<Light>>();
-    lights->emplace_back(glm::vec3(30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
-    lights->emplace_back(glm::vec3(-30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 300.0f, 50.0f);
-    lights->emplace_back(glm::vec3(0.0f, 34.0f, 36.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.2f, 0.4f, 400.0f, 50.0f);
+    lights->emplace_back(glm::vec3(2.0f, 14.0f, 2.0f), glm::vec3(0.99f, 0.95f, 0.78f), 0.1f, 0.4f, 100.0f, 50.0f, Light::Type::POINT);
+    lights->emplace_back(glm::vec3(30.0f, 10.0f, 0.0f), glm::vec3(0.09f, 0.95f, 0.08f), 0.2f, 0.4f, 300.0f, 50.0f, Light::Type::SPOT);
+    lights->emplace_back(glm::vec3(-30.0f, 10.0f, 0.0f), glm::vec3(0.99f, 0.05f, 0.08f), 0.2f, 0.4f, 300.0f, 50.0f, Light::Type::SPOT);
+    lights->emplace_back(glm::vec3(0.0f, 34.0f, 36.0f), glm::vec3(0.09f, 0.05f, 0.78f), 0.2f, 0.4f, 400.0f, 40.0f, Light::Type::SPOT);
 
     auto grid_shader = Shader::Library::CreateShader("shaders/grid/grid.vert", "shaders/grid/grid.frag");
     auto unlit_shader = Shader::Library::CreateShader("shaders/unlit/unlit.vert", "shaders/unlit/unlit.frag");
@@ -146,6 +147,7 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
     Shader::Material a_s_material = {
         .shader = lit_shader,
         .color = glm::vec3(0.15f, 0.92f, 0.17f),
+        .alpha = 0.7f,
         .lights = lights,
         .shininess = 4,
     };
@@ -255,6 +257,9 @@ Renderer::Renderer(int _initialWidth, int _initialHeight)
         glm::vec3(0.0f),
         glm::vec3(1.0f),
         rackets[2].position);
+
+    main_camera->SetPosition(cameras[selected_player].position);
+    main_camera->SetTarget(cameras[selected_player].target);
 }
 
 void Renderer::Init() {
@@ -282,7 +287,6 @@ void Renderer::Init() {
     glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32, Light::LIGHTMAP_SIZE, Light::LIGHTMAP_SIZE, (GLint)lights->size());
 
     // binds the shadow map depth texture to the framebuffer
-    //glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, shadow_map_texture, 0, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadow_map_texture, 0);
 
     // disable color draw & read buffer for this framebuffer
@@ -326,7 +330,8 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     InputCallback(_window, _deltaTime);
 
     // moves "flashlight"
-    lights->at(2).SetPosition(main_camera->GetPosition() + main_camera->GetCamRight() * -2.0f);
+    lights->at(3).SetPosition(main_camera->GetPosition() + main_camera->GetCamRight() * 2.0f);
+    lights->at(3).SetTarget(main_camera->GetPosition() + main_camera->GetCamForward() * -10.0f);
 
     // SHADOW MAP PASS
 
@@ -342,23 +347,14 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
         // clears the depth canvas to black
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        if (shadow_mode) {
+        if (shadow_mode && light_mode) {
             // draws the net
             DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
 
             // draws the rackets
-            DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
-            DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
+            DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, light.GetViewProjection(), light.GetPosition(), 0, shadow_mapper_material.get());
+            DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, light.GetViewProjection(), light.GetPosition(), 1, shadow_mapper_material.get());
 
-            ground_plane->Draw(light.GetViewProjection(), light.GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
-
-            // draws the net
-            DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
-
-            // draws the rackets
-            DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
-
-            DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, light.GetViewProjection(), light.GetPosition(), shadow_mapper_material.get());
             ground_plane->Draw(light.GetViewProjection(), light.GetPosition(), GL_TRIANGLES, shadow_mapper_material.get());
         }
     }
@@ -383,10 +379,10 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     world_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the main light cube
-    for (const auto& light: *lights) {
+    /*for (const auto& light: *lights) {
         main_light_cube->position = light.GetPosition();
         main_light_cube->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
-    }
+    }*/
 
     // draws the main grid
     main_grid->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
@@ -400,8 +396,8 @@ void Renderer::Render(GLFWwindow *_window, const double _deltaTime)
     DrawOneNet(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f), main_camera->GetViewProjection(), main_camera->GetPosition());
 
     // draws the rackets
-    DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_camera->GetViewProjection(), main_camera->GetPosition());
-    DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_camera->GetViewProjection(), main_camera->GetPosition());
+    DrawOneRacket(rackets[0].position, rackets[0].rotation, rackets[0].scale, main_camera->GetViewProjection(), main_camera->GetPosition(), 0);
+    DrawOneRacket(rackets[1].position, rackets[1].rotation + glm::vec3(0.0f, 180.0f, 0.0f), rackets[1].scale, main_camera->GetViewProjection(), main_camera->GetPosition(), 1);
 
     ground_plane->Draw(main_camera->GetViewProjection(), main_camera->GetPosition());
 
@@ -435,14 +431,14 @@ void Renderer::DrawOneNet(const glm::vec3 &_position, const glm::vec3 &_rotation
     {
         world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
         world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
-        net_cubes[1].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix,  GL_TRIANGLES, _materialOverride);
+        net_cubes[1].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
         world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
     }
 
     // first horizontal net (top)
     world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
     world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
-    net_cubes[2].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix,  GL_TRIANGLES, _materialOverride);
+    net_cubes[2].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
     world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
 
     // vertical net
@@ -488,7 +484,7 @@ void Renderer::DrawOneNet(const glm::vec3 &_position, const glm::vec3 &_rotation
     world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
 }
 
-void Renderer::DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotation, const glm::vec3 &_scale, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride)
+void Renderer::DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotation, const glm::vec3 &_scale, const glm::mat4& _viewProjection, const glm::vec3& _eyePosition, int _player, const Shader::Material *_materialOverride)
 {
     glm::mat4 world_transform_matrix = glm::mat4(1.0f);
     // global transforms
@@ -496,8 +492,29 @@ void Renderer::DrawOneRacket(const glm::vec3 &_position, const glm::vec3 &_rotat
     world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, _rotation);
     world_transform_matrix = glm::scale(world_transform_matrix, _scale);
 
-    // letter A
-    DrawOneA(world_transform_matrix, _viewProjection, _eyePosition, _materialOverride);
+    glm::mat4 secondary_transform_matrix = world_transform_matrix;
+
+    // letters
+    //player's letter
+    switch (_player) {
+        case 0:
+            DrawOneP(secondary_transform_matrix, _viewProjection, _eyePosition, _materialOverride);
+
+            secondary_transform_matrix = glm::scale(secondary_transform_matrix, glm::vec3(0.9f));
+            secondary_transform_matrix = glm::translate(secondary_transform_matrix, glm::vec3(0.0f, 2.5f, -2.0f));
+
+            DrawOneI(secondary_transform_matrix, _viewProjection, _eyePosition, _materialOverride);
+            break;
+        case 1:
+            secondary_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 180.0f, 0.0f));
+            DrawOneN(secondary_transform_matrix, _viewProjection, _eyePosition, _materialOverride);
+
+            secondary_transform_matrix = glm::scale(secondary_transform_matrix, glm::vec3(0.9f));
+            secondary_transform_matrix = glm::translate(secondary_transform_matrix, glm::vec3(0.0f, 2.5f, -2.0f));
+
+            DrawOneH(secondary_transform_matrix, _viewProjection, _eyePosition, _materialOverride);
+            break;
+    }
 
     // tennis ball
     glm::mat4 third_transform_matrix = world_transform_matrix;
@@ -709,6 +726,113 @@ void Renderer::DrawOneA(glm::mat4 world_transform_matrix, const glm::mat4& _view
     letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
 }
 
+void Renderer::DrawOneP(glm::mat4 world_transform_matrix, const glm::mat4& _viewProjection, const glm::vec3& _eyePosition, const Shader::Material *_materialOverride) {
+    //long P vertical
+    auto scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 20.0f, 0.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //short top P horizontal
+    scale_factor = glm::vec3(0.5f, 3.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 5.0f, 0.0f)); //translate to the end of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //short right P vertical
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 3.0f, 0.0f)); //translate to the end of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //short bottom P horizontal
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 3.0f, 0.0f)); //translate to the end of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+}
+
+void Renderer::DrawOneI(glm::mat4 world_transform_matrix, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride) {
+    //short I bottom horizontal
+    auto scale_factor = glm::vec3(0.5f, 3.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(-1.5f, 20.0f, 0.0f));
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //long I vertical
+    scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 1.5f, 0.0f)); //translate to the middle of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, -90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //short I top horizontal
+    scale_factor = glm::vec3(0.5f, 3.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(-1.5f, 5.0f, 0.0f));
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+}
+
+void Renderer::DrawOneN(glm::mat4 world_transform_matrix, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride) {
+    //long N vertical
+    auto scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 20.0f, 0.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //long N diagonal
+    scale_factor = glm::vec3(0.5f, 7.07f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 5.0f, 0.0f)); //translate to the end of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, -135.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //long N vertical
+    scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 7.07f, 0.0f)); //translate to the end of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 135.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+}
+
+void Renderer::DrawOneH(glm::mat4 world_transform_matrix, const glm::mat4& _viewProjection,const glm::vec3& _eyePosition, const Shader::Material *_materialOverride) {
+    //long H left vertical
+    auto scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(-1.5f, 20.0f, 0.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //short H middle horizontal
+    scale_factor = glm::vec3(0.5f, 3.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(0.0f, 2.5f, 0.0f)); //translate to the middle of the previous cube
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, 90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+
+    //long H right vertical
+    scale_factor = glm::vec3(0.5f, 5.0f, 0.5f);
+    world_transform_matrix = glm::translate(world_transform_matrix, glm::vec3(2.5f, 3.0f, 0.0f));
+    world_transform_matrix = Transforms::RotateDegrees(world_transform_matrix, glm::vec3(0.0f, 0.0f, -90.0f));
+    world_transform_matrix = glm::scale(world_transform_matrix, scale_factor);
+    letter_cubes[0].DrawFromMatrix(_viewProjection, _eyePosition, world_transform_matrix, GL_TRIANGLES, _materialOverride);
+    world_transform_matrix = glm::scale(world_transform_matrix, 1.0f / scale_factor);
+}
+
 void Renderer::ResizeCallback(GLFWwindow *_window, int _displayWidth, int _displayHeight)
 {
     viewport_width = _displayWidth;
@@ -728,26 +852,41 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
     if (Input::IsKeyPressed(_window, GLFW_KEY_1))
     {
         selected_player = 0;
+
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
     else if (Input::IsKeyPressed(_window, GLFW_KEY_2))
     {
         selected_player = 1;
+
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
     else if (Input::IsKeyPressed(_window, GLFW_KEY_3))
     {
         selected_player = 2;
+
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
 
     // loop through the camera positions
     if (Input::IsKeyReleased(_window, GLFW_KEY_M))
     {
         selected_player = (selected_player + 1) % 3;
+
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
 
     // reset the camera position
     if (Input::IsKeyPressed(_window, GLFW_KEY_R))
     {
         selected_player = 2;
+
+        main_camera->SetPosition(cameras[selected_player].position);
+        main_camera->SetTarget(cameras[selected_player].target);
     }
 
     if (Input::IsKeyReleased(_window, GLFW_KEY_L)) {
@@ -756,14 +895,6 @@ void Renderer::InputCallback(GLFWwindow *_window, const double _deltaTime)
         for (auto& light: *lights) {
             light.SetRange(light_mode ? 300.0f : 0.0f);
         }
-    }
-
-    // sets focus on the selected transform
-    const int *desired_keys = new int[5]{GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_M, GLFW_KEY_R};
-    if (Input::IsAnyKeyPressed(_window, 5, desired_keys))
-    {
-        main_camera->SetPosition(cameras[selected_player].position);
-        main_camera->SetTarget(cameras[selected_player].target);
     }
 
     // keyboard triggers

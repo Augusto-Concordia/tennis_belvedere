@@ -42,6 +42,7 @@ void VisualLine::DrawFromMatrix(const glm::mat4 &_viewProjection, const glm::vec
     current_material->shader->SetModelMatrix(_transformMatrix);
     current_material->shader->SetViewProjectionMatrix(_viewProjection);
 
+    current_material->shader->SetFloatFast("u_texture_influence", current_material->texture_influence);
     current_material->shader->SetVec3("u_color", current_material->color.r, current_material->color.g, current_material->color.b);
     current_material->shader->SetFloat("u_alpha", current_material->alpha);
 

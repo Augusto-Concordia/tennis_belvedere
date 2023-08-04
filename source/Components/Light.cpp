@@ -3,6 +3,7 @@
 
 Light::Light(glm::vec3 _position, glm::vec3 _color, float _ambientStrength, float _specularStrength, float _range, float _cutoff, Type _type) {
     position = _position;
+    target = glm::vec3(0.0f);
     color = _color;
     ambient_strength = _ambientStrength;
     specular_strength = _specularStrength;

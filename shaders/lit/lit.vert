@@ -19,7 +19,7 @@ struct Light {
     mat4 light_view_projection;
 };
 
-uniform Light u_lights[3];
+uniform Light u_lights[4];
 
 uniform mat4 u_model_transform; //model matrix
 uniform mat4 u_view_projection; //view projection matrix
@@ -32,7 +32,7 @@ layout (location = 2) in vec2 vUv; //vertex input uv
 
 out vec3 Normal;
 out vec3 FragPos;
-out vec4 FragPosLightSpace[3];
+out vec4 FragPosLightSpace[4];
 out vec2 FragUv;
 
 void main() {

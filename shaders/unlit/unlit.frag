@@ -5,7 +5,7 @@
 uniform vec3 u_color; //color
 uniform float u_alpha; //opacity
 
-uniform float u_texture_influence = 0.5; //are textures enabled?
+uniform float u_texture_influence = 0.0; //are textures enabled?
 
 uniform sampler2D u_texture; //object texture
 
