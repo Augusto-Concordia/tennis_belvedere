@@ -39,8 +39,11 @@ void main() {
     Normal = mat3(transpose(inverse(u_model_transform))) * vNormal; //we need to transform the normal with the normal matrix (https://learnopengl.com/Lighting/Basic-Lighting & http://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/)
 
     FragPos = vec3(u_model_transform * vec4(vPos, 1.0));
-    FragPosLightSpace[0] = u_lights[0].light_view_projection * vec4(FragPos, 1.0);
-    FragPosLightSpace[1] = u_lights[1].light_view_projection * vec4(FragPos, 1.0);
+
+    for (int i = 0; i < u_lights.length(); i++) {
+        FragPosLightSpace[i] = u_lights[i].light_view_projection * vec4(FragPos, 1.0);
+    }
+
     FragUv = vUv / u_texture_tiling;
 
     gl_Position = u_view_projection * u_model_transform * vec4(vPos, 1.0); //gl_Position is a built-in property of a vertex shader
