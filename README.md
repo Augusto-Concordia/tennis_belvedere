@@ -56,7 +56,7 @@ _The following controls' direction were decided relative to the default camera's
 
 <br/>
 
-_The following changes the world orientation (orbits the camera)._
+_The following changes the world orientation (orbits the camera) and only apply when the default camera view is selected._
 * `Up Arrow`: Orbit up
 * `Right Arrow`: Orbit right
 * `Down Arrow`: Orbit down
@@ -74,20 +74,19 @@ _The following changes the world orientation (orbits the camera)._
 <br/>
 
 * `Right Click` & `Horizontal Mouse`: Pan the camera (rotates it horizontally)
-* `Middle Click` & `Vertical Mouse`: TIlt the camera (rotates it vertically)
+* `Middle Click` & `Vertical Mouse`: Tilt the camera (rotates it vertically)
 * `Left Click` & `Mouse`: Moves the camera in and out of the scene (along where it's looking)
 
 <br/>
 
-* `P`: Renders the model as points
-* `L`: Renders the model as lines
+* `M`: Cycle through the camera views
+* `R`: Reset camera view to default 
 * `T`: Renders the model as filled triangles (i.e. polygons)
 
 <br/>
 
-* `X`: Toggles textures on/off
+* `L`: Toggles lights on/off
 * `B`: Toggles shadow mapping on/off
-* `Z`: Pauses light movement
 
 ## Attributions
 
